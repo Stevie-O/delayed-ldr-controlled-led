@@ -9,10 +9,15 @@ void setup() {
   Serial.print("sizeof(void*) = "); Serial.print(sizeof(void*)); Serial.println("");
 
   pinMode(PD3, INPUT);
-
 }
+
+uint8_t prev_pd3 = LOW;
 
 void loop() {
   // put your main code here, to run repeatedly:
-  delay(100);
+  uint8_t pd3 = digitalRead(PD3);
+  if (pd3 && !prev_pd3) {
+    Serial.println("button activated");
+  }
+  prev_pd3 = pd3;
 }
