@@ -2,7 +2,7 @@
 #define __CONFIG_H__
 
 // output pin for driving LEDs
-#define   OUTPUT_DRIVER_PIN   PB1   // D9
+#define   OUTPUT_DRIVER_PIN   9
 
 // analog pin for the light sensor
 #define PIN_LIGHT_SENSOR  A5

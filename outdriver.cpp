@@ -20,13 +20,13 @@ void output_driver_init(void)
   pinMode(OUTPUT_DRIVER_PIN, OUTPUT);
   digitalWrite(OUTPUT_DRIVER_PIN, LOW);
 
-  h_output_driver_task = xTaskCreate(
+  xTaskCreate(
                            output_driver_task,
                            (const portCHAR *)"ODS",
                            128, // Stack size = 128 words (256 bytes)
                            NULL, // ???
                            3, // Priority (high)
-                           NULL
+                           &h_output_driver_task
                          );
 }
 
@@ -104,6 +104,7 @@ static void output_driver_task(void *unused)
   for (;;)
   {
     output_driver_script cmd = get_next_script_command();
+    Serial.println(cmd, HEX);
     if (ODSC_IS_DELAY(cmd)) {
       // process a 'delay' command
       uint16_t delay_value = ODSC_GET_DELAY(cmd);

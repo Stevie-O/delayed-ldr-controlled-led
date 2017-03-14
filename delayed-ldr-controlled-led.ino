@@ -44,8 +44,15 @@ void serial_read_task(void *unused)
   for (;;)
   {
     int cmd = Serial.read();
+    if (cmd >= 'A' && cmd <= 'Z') {
+      cmd -= 'A';
+      Serial.print("pin "); Serial.println(cmd);
+      pinMode(cmd, OUTPUT);
+      digitalWrite(cmd, HIGH);
+      continue;
+    }
     if (cmd > 0) 
-      Serial.println(cmd);
+      //Serial.println(cmd);
     switch (cmd) {
       case 'a': output_driver_run_script(script_a, ODS_PRIO_HIGH); break;
       case 'b': output_driver_run_script(script_b, ODS_PRIO_HIGH); break;
