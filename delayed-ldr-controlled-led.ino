@@ -4,6 +4,9 @@
 #include "config.h"
 #include "outdriver.h"
 
+// must use this for conversion of durations larger than about 1000ms, due to an integer overflow bug
+#define pdMS_TO_TICKS_LONG( xTimeInMs ) ( (TickType_t) ( ( (uint32_t) ( xTimeInMs ) * (uint32_t) configTICK_RATE_HZ) / (uint32_t) 1000 ) )
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -11,6 +14,7 @@ void setup() {
   Serial.println("Hello, world!");
   Serial.print("sizeof(int) = "); Serial.print(sizeof(int)); Serial.println("");
   Serial.print("sizeof(void*) = "); Serial.print(sizeof(void*)); Serial.println("");
+  Serial.print("configTICK_RATE_HZ = "); Serial.println(configTICK_RATE_HZ);
 
   pinMode(PD3, INPUT);
   pinMode(A5, INPUT);
@@ -18,7 +22,7 @@ void setup() {
 
   output_driver_init();
 
-  TaskHandle_t h_srt = xTaskCreate(
+  xTaskCreate(
        serial_read_task,
        (const portCHAR *)"SR",
        128, // Stack size = 128 words (256 bytes)
@@ -26,8 +30,6 @@ void setup() {
        2, // Priority (medium)
        NULL
      );
-
-  Serial.print("serial_read_task handle: "); Serial.println((uint32_t)h_srt);
 }
 
 void loop() {
@@ -40,7 +42,7 @@ static const output_driver_script script_c[] = { ODSC_OUTPUT_OFF, ODSC_DELAY(pdM
                                                  ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)),  // blink off for 100ms
                                                  ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // turn on and ensure it remains that way for 100ms
                                                  ODSC_END };
-static const output_driver_script script_d[] = { ODSC_OUTPUT_OFF, ODSC_DELAY_RANDOM(pdMS_TO_TICKS(15000)), ODSC_OUTPUT_ON, ODSC_END };
+static const output_driver_script script_d[] = { ODSC_OUTPUT_OFF, ODSC_DELAY_RANDOM(pdMS_TO_TICKS_LONG(15000)), ODSC_OUTPUT_ON, ODSC_END };
 static const output_driver_script script_e[] = { ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(1000)), ODSC_END };
 static const output_driver_script script_f[] = { ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(1000)), ODSC_END };
 
