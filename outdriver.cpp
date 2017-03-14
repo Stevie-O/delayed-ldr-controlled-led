@@ -109,18 +109,24 @@ static void output_driver_task(void *unused)
       // process a 'delay' command
       uint16_t delay_value = ODSC_GET_DELAY(cmd);
       if (ODSC_IS_DELAY_RANDOM(cmd)) {
+        Serial.println("ODSC_DELAY_RANDOM");
         delay_value = random() % delay_value;
+      } else {
+        Serial.println("ODSC_DELAY");
       }
+      Serial.print("Delaying "); Serial.println(delay_value);
       ulTaskNotifyTake(pdTRUE, delay_value);
     } else {
       // process a non-delay command
       switch (cmd & 0xFF) {
         case ODSC_END:
+          Serial.println("ODSC_END");
           // wait indefinitely
           ulTaskNotifyTake(pdTRUE, (TickType_t) - 1);
           break;
         case ODSC_OUTPUT_ON:
         case ODSC_OUTPUT_OFF:
+          Serial.println( (cmd & 1) ? "ODSC_OUTPUT_ON" : "ODSC_OUTPUT_OFF");
           digitalWrite(OUTPUT_DRIVER_PIN, (cmd & 1));
           break;
       }

@@ -35,8 +35,12 @@ void loop() {
 
 static const output_driver_script script_a[] = { ODSC_OUTPUT_ON, ODSC_END };
 static const output_driver_script script_b[] = { ODSC_OUTPUT_OFF, ODSC_END };
-static const output_driver_script script_c[] = { ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)), ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)), ODSC_END };
-static const output_driver_script script_d[] = { ODSC_OUTPUT_OFF, ODSC_DELAY_RANDOM(pdMS_TO_TICKS(1000)), ODSC_OUTPUT_ON, ODSC_END };
+static const output_driver_script script_c[] = { ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)),  // ensure off for at least 100ms
+                                                 ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // blink on for 100ms
+                                                 ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)),  // blink off for 100ms
+                                                 ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // turn on and ensure it remains that way for 100ms
+                                                 ODSC_END };
+static const output_driver_script script_d[] = { ODSC_OUTPUT_OFF, ODSC_DELAY_RANDOM(pdMS_TO_TICKS(15000)), ODSC_OUTPUT_ON, ODSC_END };
 
 void serial_read_task(void *unused)
 {
