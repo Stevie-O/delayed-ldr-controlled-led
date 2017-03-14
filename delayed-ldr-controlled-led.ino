@@ -50,8 +50,9 @@ void ldr_watch_task(void *unused)
   for (;;)
   {
     int ldr = analogRead(PIN_LIGHT_SENSOR);
+    if (ldr < 0) ldr = 0; // just in case
     if (ldr != prev_ldr) {
-      Serial.print("LDR now "); Serial.println(ldr);
+      Serial.print("LDR now "); Serial.print(ldr); Serial.print(" ("); Serial.print(ldr * 0.0048828125f); Serial.println("V)");
       prev_ldr = ldr;      
     }
   }
