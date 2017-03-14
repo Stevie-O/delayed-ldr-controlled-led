@@ -21,23 +21,5 @@ More info available here: https://create.arduino.cc/projecthub/feilipu/using-fre
 The sketch
 ==========
 
-Currently, this is a prototype for the LED driver logic.  To try it out, compile+upload and open the Serial Monitor.
-Each letter A-F/a-f will run a script:
-
-A/a - turn on LED
-B/b - turn off LED
-C/c - blink LED twice, then turn it on and leave it on for 100ms
-D/d - turn off LED, wait for a random period of time from 0-15s, then turn on LED
-E/e - turn on LED and leave it on for 1s
-F/f - turn off LED and leave it off for 1s
-
-A capital letter will always replace the current script.
-A lowercase letter will replace the current script if it was run by a lowercase letter.
-A lowercase letter that follows a capital letter will wait until the capital letter script finishes first.
-
-To see this in action, you can try this:
-
-* `Ed` - (E) turn on LED for one second, then (d) turn off LED for 0-15s, then turn on LED
-* `Fc` - (F) turn off LED for one second, then (c) blink LED twice, then turn on LED
-* `Cb` - (C) Turn off LED for 100ms, blink LED on once, turn on LED for 100ms, then (b) turn off LED (effectively, blinking twice)
-
+Currently, this is a test for monitoring the LDR.
+It continously monitors the LDR input and writes to the serial port every time the value changes.

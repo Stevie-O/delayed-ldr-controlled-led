@@ -11,10 +11,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  Serial.println("Hello, world!");
-  Serial.print("sizeof(int) = "); Serial.print(sizeof(int)); Serial.println("");
-  Serial.print("sizeof(void*) = "); Serial.print(sizeof(void*)); Serial.println("");
-  Serial.print("configTICK_RATE_HZ = "); Serial.println(configTICK_RATE_HZ);
+  Serial.println("OK");
 
   pinMode(PD3, INPUT);
   pinMode(A5, INPUT);
@@ -23,8 +20,8 @@ void setup() {
   output_driver_init();
 
   xTaskCreate(
-       serial_read_task,
-       (const portCHAR *)"SR",
+       ldr_watch_task,
+       (const portCHAR *)"LDR",
        128, // Stack size = 128 words (256 bytes)
        NULL, // ???
        2, // Priority (medium)
@@ -46,28 +43,16 @@ static const output_driver_script script_d[] = { ODSC_OUTPUT_OFF, ODSC_DELAY_RAN
 static const output_driver_script script_e[] = { ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(1000)), ODSC_END };
 static const output_driver_script script_f[] = { ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(1000)), ODSC_END };
 
-static const output_driver_script * const  script_map[] = {
-  script_a,
-  script_b,
-  script_c,
-  script_d,
-  script_e,
-  script_f,   
-};
-
-
-void serial_read_task(void *unused)
+void ldr_watch_task(void *unused)
 {
-  Serial.println("serial_read_task");
+  Serial.println("ldr_watch_task");
+  int prev_ldr = -1;
   for (;;)
   {
-    int cmd = Serial.read();
-    if (cmd > 0) 
-      //Serial.println(cmd);
-    if ( (cmd >= 'A' && cmd <= 'F') || (cmd >= 'a' && cmd <= 'f')) {
-      size_t script_index =  ((cmd | 0x20) - 'a');
-      uint8_t script_prio = (cmd < 'a' ? ODS_PRIO_HIGH : ODS_PRIO_LOW);
-      output_driver_run_script(script_map[script_index], script_prio);
+    int ldr = analogRead(PIN_LIGHT_SENSOR);
+    if (ldr != prev_ldr) {
+      Serial.print("LDR now "); Serial.println(ldr);
+      prev_ldr = ldr;      
     }
   }
 }
