@@ -41,6 +41,18 @@ static const output_driver_script script_c[] = { ODSC_OUTPUT_OFF, ODSC_DELAY(pdM
                                                  ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // turn on and ensure it remains that way for 100ms
                                                  ODSC_END };
 static const output_driver_script script_d[] = { ODSC_OUTPUT_OFF, ODSC_DELAY_RANDOM(pdMS_TO_TICKS(15000)), ODSC_OUTPUT_ON, ODSC_END };
+static const output_driver_script script_e[] = { ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(1000)), ODSC_END };
+static const output_driver_script script_f[] = { ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(1000)), ODSC_END };
+
+static const output_driver_script * const  script_map[] = {
+  script_a,
+  script_b,
+  script_c,
+  script_d,
+  script_e,
+  script_f,   
+};
+
 
 void serial_read_task(void *unused)
 {
@@ -50,13 +62,11 @@ void serial_read_task(void *unused)
     int cmd = Serial.read();
     if (cmd > 0) 
       //Serial.println(cmd);
-    switch (cmd) {
-      case 'a': output_driver_run_script(script_a, ODS_PRIO_HIGH); break;
-      case 'b': output_driver_run_script(script_b, ODS_PRIO_HIGH); break;
-      case 'c': output_driver_run_script(script_c, ODS_PRIO_HIGH); break;
-      case 'd': output_driver_run_script(script_d, ODS_PRIO_HIGH); break;
+    if ( (cmd >= 'A' && cmd <= 'F') || (cmd >= 'a' && cmd <= 'f')) {
+      size_t script_index =  ((cmd | 0x20) - 'a');
+      uint8_t script_prio = (cmd < 'a' ? ODS_PRIO_HIGH : ODS_PRIO_LOW);
+      output_driver_run_script(script_map[script_index], script_prio);
     }
-    
   }
 }
 
