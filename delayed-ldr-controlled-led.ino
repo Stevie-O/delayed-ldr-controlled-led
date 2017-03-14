@@ -44,13 +44,6 @@ void serial_read_task(void *unused)
   for (;;)
   {
     int cmd = Serial.read();
-    if (cmd >= 'A' && cmd <= 'Z') {
-      cmd -= 'A';
-      Serial.print("pin "); Serial.println(cmd);
-      pinMode(cmd, OUTPUT);
-      digitalWrite(cmd, HIGH);
-      continue;
-    }
     if (cmd > 0) 
       //Serial.println(cmd);
     switch (cmd) {
