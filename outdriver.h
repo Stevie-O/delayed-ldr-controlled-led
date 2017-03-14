@@ -2,26 +2,10 @@
 #define __OUTDRIVER_H__
 
 /** outdriver.h
+ *  Header file for the output driver subsystem.
+ *  
  *  Copyright (c) 2017 Stephen Oberholtzer, all rights reserved.
- *  Published under the MIT license:
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+ *  Published under the MIT license (see LICENSE.md)
  */
 
 /** Script command types:
@@ -44,8 +28,8 @@ SOFTWARE.
 #define ODSC_GET_DELAY(x) ((x) & ODSC_DELAY_VALUE_MASK)
 
 #define ODSC_END          0x0000
-#define ODSC_OUTPUT_ON    0x0001
-#define ODSC_OUTPUT_OFF   0x0002
+#define ODSC_OUTPUT_ON    ((0x0002)|(OUTPUT_DRIVER_ACTIVE_LEVEL))
+#define ODSC_OUTPUT_OFF   ((0x0002)|(OUTPUT_DRIVER_ACTIVE_LEVEL^HIGH))
 
 #define ODS_PRIO_HIGH   2
 #define ODS_PRIO_LOW    1

@@ -1,11 +1,16 @@
+/** delayed-ldr-controlled-led
+ *  Main Arduino sketch file.
+ *  
+ *  Copyright (c) 2017 Stephen Oberholtzer, all rights reserved.
+ *  Published under the MIT license (see LICENSE.md)
+ */
+
 #include <Arduino_FreeRTOS.h>
 #include <avr/power.h>
 #include <avr/sleep.h>
 #include "config.h"
 #include "outdriver.h"
-
-// must use this for conversion of durations larger than about 1000ms, due to an integer overflow bug
-#define pdMS_TO_TICKS_LONG( xTimeInMs ) ( (TickType_t) ( ( (uint32_t) ( xTimeInMs ) * (uint32_t) configTICK_RATE_HZ) / (uint32_t) 1000 ) )
+#include "ldrmon.h"
 
 void setup() {
   // put your setup code here, to run once:
@@ -13,11 +18,11 @@ void setup() {
 
   Serial.println("OK");
 
-  pinMode(PD3, INPUT);
-  pinMode(A5, INPUT);
-  pinMode(A0, INPUT);
+  pinMode(PIN_LIGHT_SENSOR, INPUT);
+  pinMode(PIN_THRESHOLD, INPUT);
 
   output_driver_init();
+  ldrmon_init();
 
   xTaskCreate(
        ldr_watch_task,
@@ -32,29 +37,22 @@ void setup() {
 void loop() {
 }
 
-static const output_driver_script script_a[] = { ODSC_OUTPUT_ON, ODSC_END };
-static const output_driver_script script_b[] = { ODSC_OUTPUT_OFF, ODSC_END };
-static const output_driver_script script_c[] = { ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)),  // ensure off for at least 100ms
-                                                 ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // blink on for 100ms
-                                                 ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)),  // blink off for 100ms
-                                                 ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // turn on and ensure it remains that way for 100ms
-                                                 ODSC_END };
-static const output_driver_script script_d[] = { ODSC_OUTPUT_OFF, ODSC_DELAY_RANDOM(pdMS_TO_TICKS_LONG(15000)), ODSC_OUTPUT_ON, ODSC_END };
-static const output_driver_script script_e[] = { ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(1000)), ODSC_END };
-static const output_driver_script script_f[] = { ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(1000)), ODSC_END };
-
 void ldr_watch_task(void *unused)
 {
   Serial.println("ldr_watch_task");
   int prev_ldr = -1;
+  int prev_threshold = -1;
   for (;;)
   {
+    int threshold = analogRead(PIN_THRESHOLD);
+    if (threshold != prev_threshold)
+      ldrmon_set_threshold(threshold / THRESHOLD_DIVISOR);
     int ldr = analogRead(PIN_LIGHT_SENSOR);
-    if (ldr < 0) ldr = 0; // just in case
-    if (ldr != prev_ldr) {
-      Serial.print("LDR now "); Serial.print(ldr); Serial.print(" ("); Serial.print(ldr * 0.0048828125f); Serial.println("V)");
-      prev_ldr = ldr;      
-    }
+    if (ldr != prev_ldr || threshold != prev_threshold)
+      ldrmon_ldr_changed(ldr);
+
+    prev_threshold = threshold;
+    prev_ldr = ldr;
   }
 }
 

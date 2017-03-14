@@ -1,7 +1,17 @@
+/** outdriver.cpp
+ *  Output driver subsystem.
+ *  
+ *  Copyright (c) 2017 Stephen Oberholtzer, all rights reserved.
+ *  Published under the MIT license (see LICENSE.md)
+ */
+
 #include <Arduino.h>
 #include <Arduino_FreeRTOS.h>
 #include "outdriver.h"
 #include "config.h"
+
+#define DEBUG_PRINT   while(0)Serial.print
+#define DEBUG_PRINTLN while(0)Serial.println
 
 #define ODS_PRIO_NONE 0
 
@@ -104,29 +114,29 @@ static void output_driver_task(void *unused)
   for (;;)
   {
     output_driver_script cmd = get_next_script_command();
-    Serial.println(cmd, HEX);
+    DEBUG_PRINTLN(cmd, HEX);
     if (ODSC_IS_DELAY(cmd)) {
       // process a 'delay' command
       uint16_t delay_value = ODSC_GET_DELAY(cmd);
       if (ODSC_IS_DELAY_RANDOM(cmd)) {
-        Serial.println("ODSC_DELAY_RANDOM");
+        DEBUG_PRINTLN("ODSC_DELAY_RANDOM");
         delay_value = random() % delay_value;
       } else {
-        Serial.println("ODSC_DELAY");
+        DEBUG_PRINTLN("ODSC_DELAY");
       }
-      Serial.print("Delaying "); Serial.println(delay_value);
+      DEBUG_PRINT("Delaying "); DEBUG_PRINTLN(delay_value);
       ulTaskNotifyTake(pdTRUE, delay_value);
     } else {
       // process a non-delay command
       switch (cmd & 0xFF) {
         case ODSC_END:
-          Serial.println("ODSC_END");
+          DEBUG_PRINTLN("ODSC_END");
           // wait indefinitely
           ulTaskNotifyTake(pdTRUE, (TickType_t) - 1);
           break;
         case ODSC_OUTPUT_ON:
         case ODSC_OUTPUT_OFF:
-          Serial.println( (cmd & 1) ? "ODSC_OUTPUT_ON" : "ODSC_OUTPUT_OFF");
+          DEBUG_PRINTLN( (cmd & 1) ? "ODSC_OUTPUT_ON" : "ODSC_OUTPUT_OFF");
           digitalWrite(OUTPUT_DRIVER_PIN, (cmd & 1));
           break;
       }
