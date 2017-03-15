@@ -134,9 +134,15 @@ static void output_driver_task(void *unused)
           // wait indefinitely
           ulTaskNotifyTake(pdTRUE, (TickType_t) - 1);
           break;
+#if OUTPUT_DRIVER_ENABLE_PWM
+        case ODSC_OUTPUT_HALF:
+          DEBUG_PRINTLN("ODSC_OUTPUT_HALF");
+          analogWrite(OUTPUT_DRIVER_PIN, 127);
+          break;
+#endif
         case ODSC_OUTPUT_ON:
         case ODSC_OUTPUT_OFF:
-          DEBUG_PRINTLN( (cmd & 1) ? "ODSC_OUTPUT_ON" : "ODSC_OUTPUT_OFF");
+          DEBUG_PRINTLN( (cmd == ODSC_OUTPUT_ON) ? "ODSC_OUTPUT_ON" : "ODSC_OUTPUT_OFF");
           digitalWrite(OUTPUT_DRIVER_PIN, (cmd & 1));
           break;
       }

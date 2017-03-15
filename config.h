@@ -11,10 +11,15 @@
 // if you have an active-low output pin, change this to LOW
 #define OUTPUT_DRIVER_ACTIVE_LEVEL  HIGH
 
+#define OUTPUT_DRIVER_ENABLE_PWM    1
+
 // analog pin for the light sensor
 #define PIN_LIGHT_SENSOR  A5
 // analog pin for the calibration pot
 #define PIN_THRESHOLD     A0
+
+// threshold hysteresis: must move at least 3 units for it to register
+#define THRESHOLD_HYSTERESIS  4
 
 // it is assumed that LDR has one end connected to ground, in a 'maximum brightness = 0V' configuration
 
@@ -30,7 +35,7 @@
 // calibration mode idle timeout (in milliseconds)
 // after no changes have been made to the configured threshold for that long,
 // we automatically exit calibration mode.
-#define CALIBRATION_MODE_TIMEOUT  10000
+#define CALIBRATION_MODE_TIMEOUT  5000
 
 
 

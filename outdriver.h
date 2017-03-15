@@ -1,6 +1,8 @@
 #ifndef __OUTDRIVER_H__
 #define __OUTDRIVER_H__
 
+#include "config.h"
+
 /** outdriver.h
  *  Header file for the output driver subsystem.
  *  
@@ -30,6 +32,13 @@
 #define ODSC_END          0x0000
 #define ODSC_OUTPUT_ON    ((0x0002)|(OUTPUT_DRIVER_ACTIVE_LEVEL))
 #define ODSC_OUTPUT_OFF   ((0x0002)|(OUTPUT_DRIVER_ACTIVE_LEVEL^HIGH))
+
+#if OUTPUT_DRIVER_ENABLE_PWM
+#define ODSC_OUTPUT_HALF  0x0005
+#else
+#define ODSC_OUTPUT_HALF  ODSC_OUTPUT_ON
+#endif
+
 
 #define ODS_PRIO_HIGH   2
 #define ODS_PRIO_LOW    1

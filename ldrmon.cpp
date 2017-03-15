@@ -26,45 +26,47 @@ typedef enum {
   CALIBRATION_LIGHTS_OFF,
 } ldrmon_state_t;
 
+#define IN_CALIBRATION_MODE (ldrmon_state >= CALIBRATION_LIGHTS_ON)
+
 static const char* ldrmon_state_names[] = { "HOUSE_LIGHTS_ON", "HOUSE_LIGHTS_OFF", "CALIBRATION_LIGHTS_ON", "CALIBRATION_LIGHTS_OFF", };
 
 /************************ OUTPUT DRIVER SCRIPTS ************************/
 
 /** Script run when house lights go off in calibration mode. */
-static const output_driver_script cm_hl_turned_off[] = { ODSC_OUTPUT_ON, ODSC_END };
+static const output_driver_script cm_hl_turned_off[] = { ODSC_OUTPUT_HALF, ODSC_END };
 /** Script run when house lights come on in calibration mode. */
 static const output_driver_script cm_hl_turned_on[] = { ODSC_OUTPUT_OFF, ODSC_END };
 /** Script run when calibration mode starts with house lights on */
 // With HL *on*, the output driver should currently be OFF.
 static const output_driver_script cm_start_with_hl_on[] = {
-  ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // blink
+  ODSC_OUTPUT_HALF, ODSC_DELAY(pdMS_TO_TICKS(100)),   // blink
   ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)),  //
-  ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // blink again
+  ODSC_OUTPUT_HALF, ODSC_DELAY(pdMS_TO_TICKS(100)),   // blink again
   ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)),  //
   ODSC_END
 };
 /** Script run when calibration mode starts with house lights off */
 // With HL *off*, the output driver may be on, or it may be off.
 static const output_driver_script cm_start_with_hl_off[] = {
-  ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // ensure ON for at least 100ms
+  ODSC_OUTPUT_HALF, ODSC_DELAY(pdMS_TO_TICKS(100)),   // ensure ON for at least 100ms
   ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)),  // blink off for 100ms
-  ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // back on
+  ODSC_OUTPUT_HALF, ODSC_DELAY(pdMS_TO_TICKS(100)),   // back on
   ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)),  // blink off for 100ms
-  ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // back on
+  ODSC_OUTPUT_HALF, ODSC_DELAY(pdMS_TO_TICKS(100)),   // back on
   ODSC_END
 };
 
 /** Script run when house lights go on outside calibration mode */
-#define hl_turned_on cm_hl_turned_off
+static const output_driver_script hl_turned_on[] = { ODSC_OUTPUT_OFF, ODSC_END };
 /** Script to run when exiting calibration mode with house lights ON */
 #define cm_end_with_hl_on cm_start_with_hl_on
 /** Script to run when exiting calibration mode with house lights OFF */
 // With HL *off*, the ouptut driver will be ON
 static const output_driver_script cm_end_with_hl_off[] = {
   ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)),  // blink off for 100ms
-  ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // back on
+  ODSC_OUTPUT_HALF, ODSC_DELAY(pdMS_TO_TICKS(100)),   // back on
   ODSC_OUTPUT_OFF, ODSC_DELAY(pdMS_TO_TICKS(100)),  // blink off for 100ms
-  ODSC_OUTPUT_ON, ODSC_DELAY(pdMS_TO_TICKS(100)),   // back on
+  ODSC_OUTPUT_HALF, ODSC_DELAY(pdMS_TO_TICKS(100)),   // back on
   ODSC_OUTPUT_OFF,                                  // aaand off again
   ODSC_END
 };
@@ -86,7 +88,7 @@ static void calib_end_callback(TimerHandle_t unused);
 
 void ldrmon_init(void) {
   ldrmon_state = HOUSE_LIGHTS_ON;
-  threshold = UINT16_MAX;
+  threshold = 1025;
   calib_end_timer = xTimerCreate(
                       "CALIB",
                       pdMS_TO_TICKS_LONG(CALIBRATION_MODE_TIMEOUT),
@@ -105,6 +107,8 @@ static void ldrmon_set_state(ldrmon_state_t newState, const output_driver_script
   Serial.print("State changed to "); Serial.println(ldrmon_state_names[newState]);
   ldrmon_state = newState;
   output_driver_run_script(script, ODS_PRIO_LOW);
+  if (IN_CALIBRATION_MODE)
+    xTimerReset(calib_end_timer, UINT16_MAX);
 }
 
 void ldrmon_ldr_changed(int16_t ldr) {
@@ -131,7 +135,7 @@ void ldrmon_ldr_changed(int16_t ldr) {
 /** Sets the threshold for detecting house lights on/off
 */
 void ldrmon_set_threshold(int16_t new_threshold) {
-  if (threshold == new_threshold) return;
+  if (threshold - THRESHOLD_HYSTERESIS <= new_threshold && new_threshold <= threshold + THRESHOLD_HYSTERESIS) return;
   Serial.print("LDR threshold changed to "); Serial.println(new_threshold);
   threshold = new_threshold;
   // automatically enter calibration mode as soon as the threshold changes
@@ -142,9 +146,8 @@ void ldrmon_set_threshold(int16_t new_threshold) {
    In calibration mode, all hysteresis and delays to the output driver are disabled.
 */
 void ldrmon_start_calibration(void) {
-  if (ldrmon_state < CALIBRATION_LIGHTS_ON) {
-    // start timer
-    xTimerStart(calib_end_timer, UINT16_MAX);
+  xTimerReset(calib_end_timer, UINT16_MAX);
+  if (!IN_CALIBRATION_MODE) {
     if (ldrmon_state == HOUSE_LIGHTS_OFF)
       ldrmon_set_state(CALIBRATION_LIGHTS_OFF, cm_start_with_hl_off);
     else
